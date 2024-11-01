@@ -5,6 +5,8 @@ import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 import org.lwjgl.stb.STBImage;
+import util.Time;
+
 import java.nio.*;
 import java.util.Objects;
 
@@ -20,17 +22,41 @@ public class Window {
     private  long glfwWindow;
     private final String title;
     private static Window window = null;
-
+    public float r;
+    public float g;
+    public float b;
+    private final float a;
+    private boolean fadeToBlack = false;
+    private static Scene currentScene;
     private Window() {
         this.width = 800;
         this.height = 600;
         this.title = "Zero Squares";
+        r = 1;
+        b = 1;
+        g = 1;
+        a = 1;
     }
     public static Window get() {
         if (Window.window == null) {
             Window.window = new Window();
         }
         return Window.window;
+    }
+
+    public static void changeScene(int newScene) {
+        switch (newScene){
+            case 0:
+                currentScene = new LevelEditorScene();
+                //currentScene.init()
+                break;
+            case 1:
+                currentScene = new LevelScene();
+                break;
+            default:
+                assert false : "Unknown Scene (" + newScene + ")" ;
+                break;
+        }
     }
     public void showIntroScreen() {
         GL.createCapabilities();
@@ -60,7 +86,6 @@ public class Window {
 
         glDeleteTextures(textureID);
     }
-
     private int loadTexture() {
         int textureID = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, textureID);
@@ -81,7 +106,6 @@ public class Window {
 
         return textureID;
     }
-
     private void renderLogo(int textureID) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, textureID);
@@ -109,9 +133,6 @@ public class Window {
 
         glColor3f(1.0f, 1.0f, 1.0f); // Reset color to default
     }
-
-
-
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
 
@@ -154,10 +175,7 @@ public class Window {
         }
 
         // Set up a key callback. It will be called every time a key is pressed, repeated or released.
-        glfwSetKeyCallback(glfwWindow, (window, key, scancode, action, mods) -> {
-            if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
-                glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
-        });
+
 
         // Get the thread stack and push a new frame
         try ( MemoryStack stack = stackPush() ) {
@@ -192,9 +210,17 @@ public class Window {
         glfwSwapInterval(1);
         // make the window visible
         glfwShowWindow(glfwWindow);
+
+        // chose a scene to start with
+        Window.changeScene(0);
+
     }
 
     public void loop() {
+
+        float beginTime = Time.getTime();
+        float endTime;
+        float dt = -1.0f;
         // This line is critical for LWJGL's interoperation with GLFW's
         // OpenGL context, or any context that is managed externally.
         // LWJGL detects the context that is current in the current thread,
@@ -202,22 +228,36 @@ public class Window {
         // bindings available for use.
         GL.createCapabilities();
 
-        // Set the clear color
-        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         while ( !glfwWindowShouldClose(glfwWindow) ) {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+            // Poll for window events. The key callback above will only be
+            // invoked during this call.
+            glfwPollEvents();
+            // Set the clear color
 
-            glfwSwapBuffers(glfwWindow); // swap the color buffers
+            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+            glClearColor(r, g, b, a);
+
+
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             if (KeyListener.isKeyPressed(GLFW_KEY_ESCAPE)) {
                 glfwSetWindowShouldClose(glfwWindow,true);
 
             }
-            // Poll for window events. The key callback above will only be
-            // invoked during this call.
-            glfwPollEvents();
+
+            if(dt >= 0) {
+                currentScene.update(dt);
+            }
+
+            glfwSwapBuffers(glfwWindow); // swap the color buffers
+
+            endTime = Time.getTime();
+            // dt (delta time has the looped time )
+            dt = endTime - beginTime;
+            beginTime = endTime;
         }
     }
 
