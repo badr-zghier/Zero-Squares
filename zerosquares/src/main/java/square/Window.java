@@ -6,7 +6,9 @@ import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 import org.lwjgl.stb.STBImage;
 import java.nio.*;
+import java.util.Objects;
 
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryStack.*;
@@ -116,6 +118,14 @@ public class Window {
         init();
         showIntroScreen();
         loop();
+
+        // Free memory
+        glfwFreeCallbacks(glfwWindow);
+        glfwDestroyWindow(glfwWindow);
+
+        // Terminate GLFW
+        glfwTerminate();
+        Objects.requireNonNull(glfwSetErrorCallback(null)).free();
     }
 
     public void init() {
