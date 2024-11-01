@@ -179,6 +179,12 @@ public class Window {
             );
         } // the stack frame is popped automatically
 
+
+        // Mouse Event Listeners
+        glfwSetCursorPosCallback(glfwWindow,MouseListener::mousePosCallback);
+        glfwSetMouseButtonCallback(glfwWindow,MouseListener::mouseButtonCallback);
+        glfwSetScrollCallback(glfwWindow,MouseListener::mouseScrollCallback);
+
         // make the openGL context Current
         glfwMakeContextCurrent(glfwWindow);
         // Enable v-sync (buffer swapping)
