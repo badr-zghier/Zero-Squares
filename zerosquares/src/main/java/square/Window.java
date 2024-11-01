@@ -4,10 +4,9 @@ import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
-
+import org.lwjgl.stb.STBImage;
 import java.nio.*;
 
-import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryStack.*;
@@ -25,18 +24,97 @@ public class Window {
         this.height = 600;
         this.title = "Zero Squares";
     }
-
     public static Window get() {
         if (Window.window == null) {
             Window.window = new Window();
         }
         return Window.window;
     }
+    public void showIntroScreen() {
+        GL.createCapabilities();
+
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+        int textureID = loadTexture();
+
+        float introDuration = 3.0f;
+        long startTime = System.currentTimeMillis();
+
+        while ((System.currentTimeMillis() - startTime) / 1000.0f < introDuration) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            renderLogo(textureID);
+
+            // Calculate loading line progress
+            float elapsedTime = (System.currentTimeMillis() - startTime) / 1000.0f;
+            float progress = elapsedTime / introDuration;
+
+            // Render the loading line
+            renderLoadingLine(progress);
+
+            glfwSwapBuffers(glfwWindow);
+            glfwPollEvents();
+        }
+
+        glDeleteTextures(textureID);
+    }
+
+    private int loadTexture() {
+        int textureID = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, textureID);
+
+        IntBuffer width = BufferUtils.createIntBuffer(1);
+        IntBuffer height = BufferUtils.createIntBuffer(1);
+        IntBuffer channels = BufferUtils.createIntBuffer(1);
+
+        ByteBuffer image = STBImage.stbi_load("C:\\Zero-Squares\\zerosquares\\src\\assets\\logo\\intro.png", width, height, channels, 4);
+        if (image != null) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width.get(0), height.get(0), 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            STBImage.stbi_image_free(image);
+        } else {
+            throw new RuntimeException("Failed to load texture file: " + "C:\\Zero-Squares\\zerosquares\\src\\assets\\logo\\intro.png");
+        }
+
+        return textureID;
+    }
+
+    private void renderLogo(int textureID) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex2f(-1.0f, 1.0f);
+        glTexCoord2f(1, 0); glVertex2f(1.0f, 1.0f);
+        glTexCoord2f(1, 1); glVertex2f(1.0f, -1.0f);
+        glTexCoord2f(0, 1); glVertex2f(-1.0f, -1.0f);
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D);
+    }
+    private void renderLoadingLine(float progress) {
+        glColor3f(0.0f, 1.0f, 0.0f); // Set color for the loading line
+
+        float startX = -0.8f;
+        float endX = startX + progress * 1.6f; // Line grows based on progress
+        float lineY = -0.8f;
+
+        glBegin(GL_LINES);
+        glVertex2f(startX, lineY); // Starting point of the line
+        glVertex2f(endX, lineY);   // Ending point based on progress
+        glEnd();
+
+        glColor3f(1.0f, 1.0f, 1.0f); // Reset color to default
+    }
+
+
 
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
 
         init();
+        showIntroScreen();
         loop();
     }
 
