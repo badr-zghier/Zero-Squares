@@ -184,7 +184,8 @@ public class Window {
         glfwSetCursorPosCallback(glfwWindow,MouseListener::mousePosCallback);
         glfwSetMouseButtonCallback(glfwWindow,MouseListener::mouseButtonCallback);
         glfwSetScrollCallback(glfwWindow,MouseListener::mouseScrollCallback);
-
+        // Key Event Listeners
+        glfwSetKeyCallback(glfwWindow, KeyListener::keyCallback);
         // make the openGL context Current
         glfwMakeContextCurrent(glfwWindow);
         // Enable v-sync (buffer swapping)
@@ -210,7 +211,10 @@ public class Window {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
             glfwSwapBuffers(glfwWindow); // swap the color buffers
+            if (KeyListener.isKeyPressed(GLFW_KEY_ESCAPE)) {
+                glfwSetWindowShouldClose(glfwWindow,true);
 
+            }
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
