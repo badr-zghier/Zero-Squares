@@ -132,9 +132,13 @@ public class Window {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
+        // Get the primary monitor and its video mode
+        GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        assert vidmode != null;
         // Create the window
-        glfwWindow = glfwCreateWindow(this.width,this.height,this.title,NULL,NULL);
+        glfwWindow = glfwCreateWindow(vidmode.width(), vidmode.height(), title, glfwGetPrimaryMonitor(), NULL);
         if(glfwWindow == NULL) {
             throw new IllegalStateException("Failed to Create the GLFW Window");
         }
@@ -154,10 +158,10 @@ public class Window {
             glfwGetWindowSize(glfwWindow, pWidth, pHeight);
 
             // Get the resolution of the primary monitor
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            //GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
             // Center the window
-            assert vidmode != null;
+
             glfwSetWindowPos(
                     glfwWindow,
                     (vidmode.width() - pWidth.get(0)) / 2,
